@@ -19,7 +19,8 @@ class ApiClient:
 
     def upload_file(self, file: UploadedFile) -> Dict[str, Any]:
         """Envia um arquivo para ingestão."""
-        response = requests.post(f"{self.base_url}/files/upload", files={"file": file})
+        file_bytes = file.read()
+        response = requests.post(f"{self.base_url}/files/upload", files={"file": (file.name, file_bytes)})
         response.raise_for_status()
         data = response.json()
         self.ingest_id = data.get("ingestion_id")
@@ -42,7 +43,7 @@ class ApiClient:
         """Calcula métricas consolidadas com filtros opcionais."""
         payload = {
             "ingestion_id": ingestion_id,
-            "filter_criteria": filter_params.root if filter_params else None
+            "filter_criteria": filter_params.to_dict() if filter_params else None
         }
         response = requests.post(f"{self.base_url}/metrics/", json=payload)
         response.raise_for_status()
