@@ -1,5 +1,6 @@
 import requests
 from typing import List, Dict, Any, Optional
+import pandas as pd
 from app.core.settings import settings
 from app.models.metrics import MetricsResponse, TemporalResponse, AvailableMetricsResponse
 from app.models.filters import FiltersResponse, FilterParams
@@ -63,10 +64,26 @@ class ApiClient:
             "metric_names": metric_names,
             "freq": freq,
             "mode": mode,
-            "filter_criteria": filter_params.root if filter_params else None
+            "filter_criteria": filter_params.to_dict() if filter_params else None
         }
         response = requests.post(f"{self.base_url}/metrics/temporal", json=payload)
         response.raise_for_status()
         return TemporalResponse.model_validate(response.json())
+
+    def get_itens(
+        self,
+        ingestion_id: str,
+        filter_params: Optional[FilterParams] = None,
+    )-> pd.DataFrame:
+        payload = {
+            "ingestion_id": ingestion_id,
+            "filter_criteria": filter_params.to_dict() if filter_params else None
+        }
+        response = requests.get(f"{self.base_url}/itens/", json=payload)
+        response.raise_for_status()
+
+        data = response.json()["data"]
+        
+        return pd.DataFrame(data)
 
 client = ApiClient()

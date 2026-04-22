@@ -6,19 +6,16 @@ from app.models import FilterParams, RangeFilter, FilterMeta, FiltersResponse
 
 class FilterSidebar:
     def __init__(self):
-        # filtros disponíveis
         self.filter_meta: FiltersResponse = None
         self.filter_params: FilterParams = None
     def render(self):
-        # pegar request do cliente
         if not client.ingest_id:
             return
         
         if not self.filter_meta:
             self.filter_meta = client.get_filters()
             self.filter_params = FilterParams(root={})
-                
-        # agora que possui os metadados, pode comerçar a construir o painel lateral.
+
         st.sidebar.header("Filtros")
         
         for f in self.filter_meta.filters:
@@ -46,4 +43,4 @@ class FilterSidebar:
         if len(val) > 0:
             self.filter_params.root[filter.column] = val
         else:
-            self.filter_params.root[filter.column] = None
+            self.filter_params.root[filter.column] = []

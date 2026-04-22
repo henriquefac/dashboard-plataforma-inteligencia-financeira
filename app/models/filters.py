@@ -4,6 +4,9 @@ from typing import Any, Dict, Union, List, Optional
 class RangeFilter(BaseModel):
     min: Optional[Union[float, str]] = None
     max: Optional[Union[float, str]] = None
+    
+    def to_dict(self) -> dict[str, Any]:
+        return {"min": self.min, "max": self.max}
 
 FilterValue = Union[
     RangeFilter,     # range
@@ -15,7 +18,7 @@ class FilterParams(RootModel[Dict[str, FilterValue]]):
         result = {}
         for key, value in self.root.items():
             if isinstance(value, RangeFilter):
-                result[key] = value.model_dump(exclude_none=True)
+                result[key] = value.to_dict()
             else:
                 result[key] = value
         return result

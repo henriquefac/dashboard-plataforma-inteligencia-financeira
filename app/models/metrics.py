@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional
 
 class MetricValue(BaseModel):
     value: float
