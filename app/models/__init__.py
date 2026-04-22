@@ -1,6 +1,16 @@
 from .upload import DataStatus
 from .metrics import MetricsResponse, TemporalResponse, AvailableMetricsResponse
 from .filters import FilterParams, RangeFilter, FilterMeta, FiltersResponse
+from .insight import (
+    Insight, 
+    InsightsResponse, 
+    AnomaliesResponse, 
+    InsightMetricsResponse,
+    Anomalia,
+    Padrao,
+    Metrica,
+    parse_intervalo
+)
 
 __all__ = [
     "DataStatus",
@@ -10,5 +20,13 @@ __all__ = [
     "FiltersResponse",
     "FilterParams",
     "RangeFilter",
-    "FilterMeta"
+    "FilterMeta",
+    "InsightsResponse",
+    "AnomaliesResponse",
+    "InsightMetricsResponse",
+    "Insight",
+    "Anomalia",
+    "Padrao",
+    "Metrica",
+    "parse_intervalo",
 ]

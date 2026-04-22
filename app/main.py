@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from app.api.v1.client import client
-from app.components import UploadScream, FilterSidebar, MetricsDisplay, TemporalEvolution, ItemsTable
+from app.components import UploadScream, FilterSidebar, MetricsDisplay, TemporalEvolution, ItemsTable, InsightsDisplay
 
 # 1. Configuração da página
 st.set_page_config(
@@ -49,6 +49,23 @@ st.markdown("""
     border-color: #3a3a3a;
     transform: translateY(-2px);
 }
+
+/* Insight and Anomaly Cards */
+.insight-card, .anomaly-card, .pattern-card {
+    background: #1a1a1a;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.insight-card:hover, .anomaly-card:hover, .pattern-card:hover {
+    background: #222222;
+    border-color: #444444;
+    transform: translateX(5px);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -63,6 +80,8 @@ if 'temporal_evolution' not in st.session_state:
     st.session_state.temporal_evolution = TemporalEvolution()
 if 'items_table' not in st.session_state:
     st.session_state.items_table = ItemsTable()
+if 'insights_display' not in st.session_state:
+    st.session_state.insights_display = InsightsDisplay()
 # 4. Fluxo Principal
 # Se não houver um ID de ingestão, mostramos apenas a tela de upload
 if not client.ingest_id:
@@ -97,6 +116,11 @@ try:
 
     # Renderizar Evolução Temporal
     st.session_state.temporal_evolution.render(applied_filters)
+
+    st.divider()
+
+    # Renderizar Insights e Anomalias
+    st.session_state.insights_display.render(applied_filters)
 
     st.divider()
 

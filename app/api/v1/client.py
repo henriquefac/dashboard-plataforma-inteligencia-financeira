@@ -4,7 +4,14 @@ import pandas as pd
 from app.core.settings import settings
 from app.models.metrics import MetricsResponse, TemporalResponse, AvailableMetricsResponse
 from app.models.filters import FiltersResponse, FilterParams
-
+from app.models.insight import (
+    parse_metrics_response, 
+    parse_anomalies_response, 
+    parse_insights_response,
+    InsightsResponse,
+    AnomaliesResponse,
+    InsightMetricsResponse
+)
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 class ApiClient:
@@ -85,5 +92,50 @@ class ApiClient:
         data = response.json()["data"]
         
         return pd.DataFrame(data)
+
+    def get_insight(
+        self,
+        ingestion_id: str,
+        filter_params: Optional[FilterParams] = None,
+    )-> InsightsResponse:
+        payload = {
+            "ingestion_id": ingestion_id,
+            "filter_criteria": filter_params.to_dict() if filter_params else None
+        }
+        response = requests.post(f"{self.base_url}/insights/", json=payload)
+        response.raise_for_status()
+
+        data = response.json()
+        return parse_insights_response(data)
+
+    def get_insights_anomalies(
+        self,
+        ingestion_id: str,
+        filter_params: Optional[FilterParams] = None,
+    )-> AnomaliesResponse:
+        payload = {
+            "ingestion_id": ingestion_id,
+            "filter_criteria": filter_params.to_dict() if filter_params else None
+        }
+        response = requests.post(f"{self.base_url}/insights/anomalies/", json=payload)
+        response.raise_for_status()
+
+        data = response.json()
+        return parse_anomalies_response(data)
+
+    def get_insights_metrics(
+        self,
+        ingestion_id: str,
+        filter_params: Optional[FilterParams] = None,
+    )-> InsightMetricsResponse:
+        payload = {
+            "ingestion_id": ingestion_id,
+            "filter_criteria": filter_params.to_dict() if filter_params else None
+        }
+        response = requests.post(f"{self.base_url}/insights/metrics/", json=payload)
+        response.raise_for_status()
+
+        data = response.json()
+        return parse_metrics_response(data)
 
 client = ApiClient()
