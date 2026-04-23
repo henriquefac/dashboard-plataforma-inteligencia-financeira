@@ -196,4 +196,15 @@ class ApiClient:
         data = response.json()
         return parse_metrics_response(data)
 
+    @st.cache_data(ttl=3600, show_spinner="🤖 IA Interpretando Dados...")
+    def rag_interpret(_self, ingestion_id: str, question: str) -> Dict[str, Any]:
+        """Consulta o RAG para interpretar dados em linguagem natural."""
+        payload = {
+            "ingestion_id": ingestion_id,
+            "question": question
+        }
+        response = requests.post(f"{_self.base_url}/rag/analytics/interpret", json=payload)
+        response.raise_for_status()
+        return response.json()
+
 client = ApiClient()

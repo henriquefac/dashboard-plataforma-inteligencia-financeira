@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from app.api.v1.client import client
-from app.components import UploadScream, FilterSidebar, MetricsDisplay, TemporalEvolution, ItemsTable, InsightsDisplay
+from app.components import UploadScream, FilterSidebar, MetricsDisplay, TemporalEvolution, ItemsTable, InsightsDisplay, RAGSidebar
 
 # 1. Configuração da página
 st.set_page_config(
@@ -82,6 +82,9 @@ if 'items_table' not in st.session_state:
     st.session_state.items_table = ItemsTable()
 if 'insights_display' not in st.session_state:
     st.session_state.insights_display = InsightsDisplay()
+if 'rag_sidebar' not in st.session_state:
+    st.session_state.rag_sidebar = RAGSidebar()
+
 # 4. Fluxo Principal
 # Se não houver um ID de ingestão, mostramos apenas a tela de upload
 if not client.ingest_id:
@@ -95,43 +98,48 @@ if not client.ingest_id:
         # e iniciar o dashboard
         st.rerun()
 
-# 5. Renderização dos Filtros (Sidebar)
-# O componente FilterSidebar utiliza o client.ingest_id definido no passo anterior
+# 5. Renderização dos Filtros (Sidebar Esquerda)
 st.session_state.filter_sidebar.render()
 applied_filters = st.session_state.filter_sidebar.filter_params
 
-# 6. Dashboard Principal (Métricas e Gráficos)
-st.title("📊 Dashboard Financeiro")
-st.caption(f"ID da Ingestão Atual: `{client.ingest_id}`")
+# 6. Layout Principal com Colunas (Simulando Sidebar Direita)
+col_main, col_spacer, col_rag = st.columns([10, 0.5, 3])
 
-try:
-    # Renderizar Componente de Métricas (KPIs)
-    metrics_data = st.session_state.metrics_display.render(applied_filters)
+with col_main:
+    st.title("📊 Dashboard Financeiro")
+    st.caption(f"ID da Ingestão Atual: `{client.ingest_id}`")
 
-    st.divider()
+    try:
+        # Renderizar Componente de Métricas (KPIs)
+        metrics_data = st.session_state.metrics_display.render(applied_filters)
 
-    # Renderizar Evolução Temporal
-    st.session_state.temporal_evolution.render(applied_filters)
+        st.divider()
 
-    st.divider()
+        # Renderizar Evolução Temporal
+        st.session_state.temporal_evolution.render(applied_filters)
 
-    # Renderizar Tabela de Itens
-    st.session_state.items_table.render(applied_filters)
+        st.divider()
 
+        # Renderizar Tabela de Itens
+        st.session_state.items_table.render(applied_filters)
 
-    st.divider()
+        st.divider()
 
-    # Renderizar Insights e Anomalias
-    st.session_state.insights_display.render(applied_filters)
+        # Renderizar Insights e Anomalias
+        st.session_state.insights_display.render(applied_filters)
 
+    except Exception as e:
+        st.error(f"Erro ao carregar dashboard: {e}")
+        st.stop()
 
-except Exception as e:
-    st.error(f"Erro ao carregar dashboard: {e}")
-    st.stop()
+with col_rag:
+    # Renderizar Sidebar do RAG (IA)
+    st.session_state.rag_sidebar.render()
 
 st.divider()
 
 # --- FOOTER ---
 st.sidebar.markdown("---")
 st.sidebar.button("🔄 Novo Upload", on_click=lambda: setattr(client, 'ingest_id', None))
-st.sidebar.info(f"Registros processados: **{metrics_data.total_registros}**")
+if 'metrics_data' in locals():
+    st.sidebar.info(f"Registros processados: **{metrics_data.total_registros}**")
