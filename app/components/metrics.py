@@ -7,44 +7,25 @@ from app.models.filters import FilterParams
 
 class MetricsDisplay:
     def __init__(self):
-        if "metrics_cache" not in st.session_state:
-            st.session_state.metrics_cache = None
-        if "metrics_last_filters" not in st.session_state:
-            st.session_state.metrics_last_filters = None
         if "metrics_expanded" not in st.session_state:
             st.session_state.metrics_expanded = True
 
-    def _get_metrics(self, filters: Optional[FilterParams]):
-        """Busca métricas e atualiza o cache se os filtros mudaram."""
-        # Convert filters to dict for comparison if it's a FilterParams object
-        filters_dict = filters.to_dict() if filters else {}
-        
-        if (st.session_state.metrics_cache is None or 
-            st.session_state.metrics_last_filters != filters_dict):
-            
-            with st.spinner("Atualizando indicadores..."):
-                try:
-                    metrics_data = client.get_metrics(client.ingest_id, filters)
-                    st.session_state.metrics_cache = metrics_data
-                    st.session_state.metrics_last_filters = filters_dict
-                except Exception as e:
-                    st.error(f"Erro ao carregar métricas: {e}")
-        
-        return st.session_state.metrics_cache
-
     def render(self, filters: Optional[FilterParams] = None):
         if not client.ingest_id:
-            return
+            return None
 
-        metrics_data = self._get_metrics(filters)
+        try:
+            metrics_data = client.get_metrics(client.ingest_id, filters)
+        except Exception as e:
+            st.error(f"Erro ao carregar métricas: {e}")
+            return None
+            
         if not metrics_data:
-            return
+            return None
 
         m = metrics_data.metricas
 
         with st.container():
-            # Usando uma div para o CSS sticky funcionar se possível (depende da estrutura do Streamlit)
-            
             with st.expander("📊 Indicadores de Desempenho", expanded=st.session_state.metrics_expanded):
                 # Row 1: Receita potencial, receita Real, Receita Inadimplente
                 r1_c1, r1_c2, r1_c3 = st.columns(3)
@@ -122,4 +103,4 @@ class MetricsDisplay:
                     
                     st.altair_chart(pie_chart, use_container_width=True)
 
-            st.markdown('</div>', unsafe_allow_html=True)
+        return metrics_data

@@ -12,28 +12,25 @@ class TemporalEvolution:
             st.session_state.temp_group = None
         if "temp_metrics" not in st.session_state:
             st.session_state.temp_metrics = []
+        if "temp_metrics_selector" not in st.session_state:
+            st.session_state.temp_metrics_selector = []
         if "temp_mode" not in st.session_state:
             st.session_state.temp_mode = "pontual"
         if "temp_freq" not in st.session_state:
             st.session_state.temp_freq = "M"
-        if "temp_available" not in st.session_state:
-            st.session_state.temp_available = None
 
     def _fetch_available_metrics(self) -> AvailableMetricsResponse:
-        """Busca métricas disponíveis e armazena no cache."""
-        if st.session_state.temp_available is None:
-            try:
-                st.session_state.temp_available = client.get_available_metrics()
-            except Exception as e:
-                st.error(f"Erro ao buscar métricas disponíveis: {e}")
-                return None
-        return st.session_state.temp_available
+        """Busca métricas disponíveis."""
+        try:
+            return client.get_available_metrics()
+        except Exception as e:
+            st.error(f"Erro ao buscar métricas disponíveis: {e}")
+            return None
 
     def _get_chart_data(self, ingestion_id: str, metric_names: List[str], mode: str, freq: str, filters: Optional[FilterParams]):
         """Busca dados de evolução temporal e formata para o Streamlit."""
         if not metric_names:
             return None
-        
         try:
             response = client.get_temporal(
                 ingestion_id=ingestion_id,
@@ -43,13 +40,9 @@ class TemporalEvolution:
                 filter_params=filters
             )
             
-            # Transformar a resposta em um DataFrame para o st.line_chart
-            # O st.line_chart espera o índice como X e colunas como séries
-            
             all_series = {}
             dates = []
             
-            # Iterar sobre a evolução (Dict[str, List[TemporalResult]])
             for group_name, results in response.evolucao.items():
                 for res in results:
                     if not dates:
@@ -91,7 +84,10 @@ class TemporalEvolution:
         # Se mudar o grupo, resetamos as métricas selecionadas para incluir todas do grupo novo
         if selected_group != st.session_state.temp_group:
             st.session_state.temp_group = selected_group
-            st.session_state.temp_metrics = available.groups.get(selected_group, [])
+            new_metrics = available.groups.get(selected_group, [])
+            st.session_state.temp_metrics = new_metrics
+            # Sincroniza explicitamente a chave do widget multiselect
+            st.session_state.temp_metrics_selector = new_metrics
             st.rerun()
 
         # 2. Configurações e Filtros de Métricas
@@ -99,17 +95,18 @@ class TemporalEvolution:
         
         with col_opts:
             group_metrics = available.groups.get(st.session_state.temp_group, [])
-            # Se ainda não houver métricas selecionadas (primeiro load do grupo), selecionamos todas
-            if not st.session_state.temp_metrics:
-                st.session_state.temp_metrics = group_metrics
+            
+            # Garante que a chave do seletor esteja populada se estiver vazia e houver métricas
+            if not st.session_state.temp_metrics_selector and group_metrics:
+                st.session_state.temp_metrics_selector = group_metrics
 
-            selected_metrics = st.multiselect(
+            st.multiselect(
                 "Métricas para exibir",
                 options=group_metrics,
-                default=st.session_state.temp_metrics,
                 key="temp_metrics_selector"
             )
-            st.session_state.temp_metrics = selected_metrics
+            # O st.session_state.temp_metrics_selector é atualizado automaticamente pelo widget
+            st.session_state.temp_metrics = st.session_state.temp_metrics_selector
 
         with col_mode:
             # Alternar entre Acumulado e Período

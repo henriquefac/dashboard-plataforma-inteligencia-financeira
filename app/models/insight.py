@@ -1,5 +1,5 @@
-from typing import Union, Dict, Optional, List
-from dataclasses import dataclass
+from typing import Union, Dict, Optional, List, Any
+from pydantic import BaseModel, Field, ConfigDict
 import re
 
 # Representação da resposta do endpoint: /insights/metrics/
@@ -61,13 +61,14 @@ ValorMetrica = Union[
     list[dict]
 ]
 
-@dataclass
-class Metrica:
+class Metrica(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
     nome: str
     valor: ValorMetrica
     descricao: str
-    unidade: Optional[str]
-    interpretacao: Optional[str]
+    unidade: Optional[str] = None
+    interpretacao: Optional[str] = None
 
     @property
     def tipo(self) -> str:
@@ -99,24 +100,27 @@ class Metrica:
 }
 """
 
-@dataclass
-class Anomalia:
+class Anomalia(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
     tipo: str
     descricao: str
     evidencia: str
     risco: str
     recomendacao: str
 
-@dataclass
-class Padrao:
+class Padrao(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
     tipo: str
     descricao: str
     evidencia: str
 
-@dataclass
-class AnomaliesResponse:
-    anomalias: List[Anomalia]
-    padroes: List[Padrao]
+class AnomaliesResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    anomalias: List[Anomalia] = Field(default_factory=list)
+    padroes: List[Padrao] = Field(default_factory=list)
 
 # Representação do modelo para a resposta do endpoint: /insights/
 
@@ -135,22 +139,23 @@ class AnomaliesResponse:
 }
 """
 
-@dataclass
-class Insight:
+class Insight(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
     titulo: str
     observacao: str
     impacto: str
     acao: str
     severidade: str 
 
-@dataclass
-class InsightsResponse:
-    insights: List[Insight]
+class InsightsResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    insights: List[Insight] = Field(default_factory=list)
 
-@dataclass
-class InsightMetricsResponse:
+class InsightMetricsResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     metricas_basicas: Dict[str, Dict[str, float]]
-    metricas_avancadas: List[Metrica]
+    metricas_avancadas: List[Metrica] = Field(default_factory=list)
 
 def is_interval_key(s: str) -> bool:
     return isinstance(s, str) and (
@@ -224,10 +229,7 @@ def parse_metrics_response(json_data: dict) -> InsightMetricsResponse:
     )
 
 def parse_anomalies_response(json_data: dict) -> AnomaliesResponse:
-    anomalias = [Anomalia(**a) for a in json_data.get("anomalias", [])]
-    padroes = [Padrao(**p) for p in json_data.get("padroes", [])]
-    return AnomaliesResponse(anomalias=anomalias, padroes=padroes)
+    return AnomaliesResponse.model_validate(json_data)
 
 def parse_insights_response(json_data: dict) -> InsightsResponse:
-    insights = [Insight(**i) for i in json_data.get("insights", [])]
-    return InsightsResponse(insights=insights)
+    return InsightsResponse.model_validate(json_data)

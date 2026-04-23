@@ -6,28 +6,7 @@ from app.models.filters import FilterParams
 
 class ItemsTable:
     def __init__(self):
-        if "items_cache" not in st.session_state:
-            st.session_state.items_cache = None
-        if "items_last_filters" not in st.session_state:
-            st.session_state.items_last_filters = None
-
-    def _get_items(self, filters: Optional[FilterParams]):
-        """Busca itens e atualiza o cache se os filtros mudaram."""
-        filters_dict = filters.to_dict() if filters else {}
-        
-        if (st.session_state.items_cache is None or 
-            st.session_state.items_last_filters != filters_dict):
-            
-            with st.spinner("Atualizando listagem de itens..."):
-                try:
-                    df = client.get_itens(client.ingest_id, filters)
-                    st.session_state.items_cache = df
-                    st.session_state.items_last_filters = filters_dict
-                except Exception as e:
-                    st.error(f"Erro ao carregar itens: {e}")
-                    return pd.DataFrame()
-        
-        return st.session_state.items_cache
+        pass
 
     def render(self, filters: Optional[FilterParams] = None):
         if not client.ingest_id:
@@ -35,7 +14,11 @@ class ItemsTable:
 
         st.markdown("### 📋 Detalhamento dos Dados")
         
-        df = self._get_items(filters)
+        try:
+            df = client.get_itens(client.ingest_id, filters)
+        except Exception as e:
+            st.error(f"Erro ao carregar itens: {e}")
+            return
         
         if df is None or df.empty:
             st.info("Nenhum item encontrado para os filtros selecionados.")

@@ -105,12 +105,8 @@ st.title("📊 Dashboard Financeiro")
 st.caption(f"ID da Ingestão Atual: `{client.ingest_id}`")
 
 try:
-    with st.spinner("Buscando metadados..."):
-        available_info = client.get_available_metrics()
-    
     # Renderizar Componente de Métricas (KPIs)
-    st.session_state.metrics_display.render(applied_filters)
-    metrics_data = st.session_state.metrics_cache # Pegar do cache preenchido pelo render
+    metrics_data = st.session_state.metrics_display.render(applied_filters)
 
     st.divider()
 
@@ -119,13 +115,15 @@ try:
 
     st.divider()
 
-    # Renderizar Insights e Anomalias
-    st.session_state.insights_display.render(applied_filters)
+    # Renderizar Tabela de Itens
+    st.session_state.items_table.render(applied_filters)
+
 
     st.divider()
 
-    # Renderizar Tabela de Itens
-    st.session_state.items_table.render(applied_filters)
+    # Renderizar Insights e Anomalias
+    st.session_state.insights_display.render(applied_filters)
+
 
 except Exception as e:
     st.error(f"Erro ao carregar dashboard: {e}")
