@@ -2,7 +2,7 @@
 
 Este é o frontend da plataforma, desenvolvido para fornecer uma visualização clara, interativa e inteligente dos dados financeiros processados pelo backend.
 
-## 🎨 Design e UX
+## Design e UX
 
 ### Por que Streamlit?
 O **Streamlit** foi escolhido para o desenvolvimento do MVP devido a:
